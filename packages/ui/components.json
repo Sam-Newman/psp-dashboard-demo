@@ -1,0 +1,26 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": true,
+  "tsx": true,
+  "tailwind": {
+    "config": "tailwind.config.ts",
+    "css": "src/globals.css",
+    "baseColor": "neutral",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "registries": {
+    "@walletconnect": {
+      "url": "https://dashboard.walletconnect.com/r/{name}.json"
+    }
+  },
+  "iconLibrary": "lucide",
+  "aliases": {
+    "components": "@pay-merchant/ui/components",
+    "utils": "@pay-merchant/ui/lib/utils",
+    "hooks": "@pay-merchant/ui/hooks",
+    "lib": "@pay-merchant/ui/lib",
+    "ui": "@pay-merchant/ui/components"
+  }
+}
