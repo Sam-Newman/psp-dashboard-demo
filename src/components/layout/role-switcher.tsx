@@ -1,6 +1,6 @@
 "use client";
 
-import { CaretDown, Headset, Shield, ChartLine } from "@phosphor-icons/react";
+import { CaretDown, Headset, Shield } from "@phosphor-icons/react";
 
 import { Button } from "@pay-merchant/ui/ui/button";
 import { Menu, MenuItem, MenuPopover, MenuTrigger } from "@pay-merchant/ui/ui/menu";
@@ -10,13 +10,11 @@ import { Role, roleDescriptions, roleLabels } from "@/lib/types/role";
 
 const roleIcons: Record<Role, typeof Shield> = {
   admin: Shield,
-  analyst: ChartLine,
   support: Headset,
 };
 
 const roleColors: Record<Role, string> = {
   admin: "text-blue-400",
-  analyst: "text-emerald-400",
   support: "text-amber-400",
 };
 

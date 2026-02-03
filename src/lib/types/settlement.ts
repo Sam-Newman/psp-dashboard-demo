@@ -1,4 +1,4 @@
-export type SettlementStatus = "pending" | "processing" | "completed";
+export type SettlementStatus = "pending" | "processing" | "completed" | "failed";
 
 export interface SettlementBreakdown {
   chain: string;
@@ -23,16 +23,29 @@ export interface Settlement {
   createdAt: string;
   completedAt?: string;
   breakdown: SettlementBreakdown[];
+  // New fields
+  cryptoIn: {
+    token: string;
+    amount: number;
+    chain: string;
+  }[];
+  fiatOut: number;
+  exchangeRate?: number;
+  platformFees: number;
+  networkFees: number;
+  linkedTransactionIds: string[];
 }
 
 export const settlementStatusLabels: Record<SettlementStatus, string> = {
   pending: "Pending",
   processing: "Processing",
   completed: "Completed",
+  failed: "Failed",
 };
 
-export const settlementStatusColors: Record<SettlementStatus, "warning" | "info" | "success"> = {
+export const settlementStatusColors: Record<SettlementStatus, "warning" | "info" | "success" | "error"> = {
   pending: "warning",
   processing: "info",
   completed: "success",
+  failed: "error",
 };

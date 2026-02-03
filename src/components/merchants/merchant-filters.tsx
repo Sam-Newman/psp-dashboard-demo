@@ -22,7 +22,15 @@ export function MerchantFilters({
   statusFilter,
   onStatusFilterChange,
 }: MerchantFiltersProps) {
-  const statusOptions: (MerchantStatus | "all")[] = ["all", "active", "pending_kyc", "suspended", "offboarded"];
+  const statusOptions: (MerchantStatus | "all")[] = [
+    "all",
+    "active",
+    "pending_kyb",
+    "kyb_in_review",
+    "kyb_rejected",
+    "suspended",
+    "disabled",
+  ];
 
   return (
     <div className="flex items-center gap-3">

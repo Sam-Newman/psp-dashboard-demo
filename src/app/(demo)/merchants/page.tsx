@@ -11,7 +11,7 @@ import { mockMerchants } from "@/lib/mock-data/merchants";
 import { supportedChains } from "@/lib/constants/chains";
 import { getTokensForChain } from "@/lib/constants/caip";
 import { createMerchant, getMerchant, updateMerchant } from "@/app/actions/merchants";
-import { ApiMerchant } from "@/lib/types/merchant";
+import { ApiMerchant, MerchantStatus } from "@/lib/types/merchant";
 
 const MERCHANT_IDS_KEY = "psp-dashboard-merchant-ids";
 
@@ -50,7 +50,7 @@ interface DisplayMerchant {
   companyName: string;
   legalEntity: string;
   contactEmail: string;
-  status: "pending_kyc" | "active" | "suspended" | "offboarded";
+  status: MerchantStatus;
   totalVolume: number;
   transactionCount: number;
   supportedChains: string[];
@@ -67,7 +67,7 @@ function apiMerchantToDisplay(merchant: ApiMerchant): DisplayMerchant {
     companyName: merchant.name,
     legalEntity: `${merchant.name} Ltd`,
     contactEmail: `contact@${merchant.name.toLowerCase().replace(/\s+/g, "")}.com`,
-    status: "active",
+    status: "pending_kyb" as MerchantStatus,
     totalVolume: Math.floor(Math.random() * 500000) + 10000,
     transactionCount: Math.floor(Math.random() * 1000) + 50,
     supportedChains: chains,

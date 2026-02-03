@@ -1,255 +1,323 @@
 "use client";
 
 import { use } from "react";
-
+import { ArrowLeft, ExternalLink, Copy, Check, Clock, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 
-import {
-  ArrowLeft,
-  ArrowSquareOut,
-  CheckCircle,
-  Clock,
-  Copy,
-  XCircle,
-} from "@phosphor-icons/react";
-
-import { Badge } from "@pay-merchant/ui/ui/badge";
-import { Button } from "@pay-merchant/ui/ui/button";
-import { Card } from "@pay-merchant/ui/ui/card";
-import { Separator } from "@pay-merchant/ui/ui/separator";
-import { toast } from "@pay-merchant/ui/ui/toast";
-
-import { TransactionStatusBadge } from "@/components/transactions/transaction-status-badge";
-import { PageHeader } from "@/components/shared/page-header";
+import { StatusBadge } from "@/components/shared/status-badge";
+import { TransactionError } from "@/components/transactions/transaction-error";
 import { getTransactionById } from "@/lib/mock-data/transactions";
 import { transactionSubstatusLabels } from "@/lib/types/transaction";
-import { getChainName } from "@/lib/constants/chains";
-import { formatCurrency, formatDateTime, truncateTxHash } from "@/lib/utils/format";
 
-export default function TransactionDetailPage({ params }: { params: Promise<{ id: string }> }) {
+interface TransactionDetailPageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default function TransactionDetailPage({ params }: TransactionDetailPageProps) {
   const { id } = use(params);
-  const router = useRouter();
-
   const transaction = getTransactionById(id);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
 
   if (!transaction) {
     return (
-      <div className="flex flex-col gap-6">
-        <PageHeader title="Transaction Not Found" />
-        <Card className="p-6">
-          <p className="text-secondary">The requested transaction could not be found.</p>
-          <Link href="/transactions">
-            <Button variant="neutral" className="mt-4">
-              Back to Transactions
-            </Button>
+      <div className="p-8">
+        <div className="bg-[#252525] rounded-[20px] p-6 text-center">
+          <p className="text-[14px] text-[#bbb] tracking-[-0.14px]">
+            Transaction not found
+          </p>
+          <Link
+            href="/transactions"
+            className="inline-flex items-center gap-2 mt-4 text-[#0988f0] hover:text-[#0770c8] transition-colors"
+          >
+            <ArrowLeft size={16} />
+            Back to Transactions
           </Link>
-        </Card>
+        </div>
       </div>
     );
   }
 
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success(`${label} copied to clipboard`);
+  const handleCopy = async (text: string, field: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
   };
 
-  const timelineEvents = [
+  const CopyButton = ({ text, field }: { text: string; field: string }) => (
+    <button
+      onClick={() => handleCopy(text, field)}
+      className="text-[#bbb] hover:text-white transition-colors"
+      title="Copy"
+    >
+      {copiedField === field ? (
+        <Check size={14} className="text-[#4ade80]" />
+      ) : (
+        <Copy size={14} />
+      )}
+    </button>
+  );
+
+  const timelineSteps = [
     {
       label: "Created",
-      time: transaction.createdAt,
+      timestamp: transaction.createdAt,
       completed: true,
       icon: Clock,
     },
     {
       label: "Confirmed",
-      time: transaction.confirmedAt,
+      timestamp: transaction.confirmedAt,
       completed: !!transaction.confirmedAt,
-      icon: transaction.confirmedAt ? CheckCircle : Clock,
+      icon: CheckCircle,
     },
     {
       label: "Settled",
-      time: transaction.settledAt,
+      timestamp: transaction.settledAt,
       completed: !!transaction.settledAt,
-      icon: transaction.settledAt ? CheckCircle : Clock,
+      icon: CheckCircle,
     },
   ];
 
-  if (transaction.status === "failed" || transaction.status === "expired") {
-    timelineEvents.push({
-      label: transaction.status === "failed" ? "Failed" : "Expired",
-      time: transaction.updatedAt,
-      completed: true,
-      icon: XCircle,
-    });
-  }
+  const isFailed = transaction.status === "failed" || transaction.status === "expired";
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-4">
-        <Button variant="icon" size="sm" onClick={() => router.back()}>
-          <ArrowLeft className="size-4" />
-        </Button>
+    <div className="p-8 max-w-5xl">
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-6">
+        <Link
+          href="/transactions"
+          className="text-[#bbb] hover:text-white transition-colors"
+        >
+          <ArrowLeft size={24} />
+        </Link>
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold font-mono">{transaction.id}</h1>
-            <TransactionStatusBadge status={transaction.status} />
+            <h1 className="text-[24px] text-white tracking-[-0.24px]">
+              Transaction Details
+            </h1>
+            <StatusBadge status={transaction.status} substatus={transaction.substatus} />
           </div>
-          {transaction.substatus && (
-            <p className="text-secondary">
-              {transactionSubstatusLabels[transaction.substatus]}
-            </p>
-          )}
+          <p className="text-[14px] text-[#bbb] tracking-[-0.14px] font-mono mt-1">
+            {transaction.id}
+          </p>
         </div>
       </div>
 
+      {/* Error Panel (if failed) */}
+      {isFailed && transaction.errorCode && (
+        <div className="mb-6">
+          <TransactionError
+            errorCode={transaction.errorCode}
+            errorMessage={transaction.errorMessage}
+          />
+        </div>
+      )}
+
       <div className="grid grid-cols-3 gap-6">
-        <Card className="col-span-2 p-6">
-          <h2 className="font-semibold mb-4">Transaction Details</h2>
-
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <p className="text-sm text-secondary">Gross Amount</p>
-              <p className="text-2xl font-semibold">{formatCurrency(transaction.amountFiat)}</p>
-              <p className="text-sm text-secondary">
-                {transaction.amountCrypto} {transaction.token}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-secondary">Net Amount</p>
-              <p className="text-2xl font-semibold">{formatCurrency(transaction.netAmount)}</p>
-              <p className="text-sm text-secondary">
-                Fee: {formatCurrency(transaction.feeAmount)}
-              </p>
-            </div>
-          </div>
-
-          <Separator className="my-6" />
-
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <p className="text-sm text-secondary mb-1">Merchant</p>
-              <Link href={`/merchants/${transaction.merchantId}`} className="font-medium text-accent hover:underline">
-                {transaction.merchantName}
-              </Link>
-            </div>
-            <div>
-              <p className="text-sm text-secondary mb-1">Chain / Token</p>
-              <div className="flex items-center gap-2">
-                <Badge variant="info">{getChainName(transaction.chain)}</Badge>
-                <Badge variant="accent">{transaction.token}</Badge>
-              </div>
-            </div>
-          </div>
-
-          <Separator className="my-6" />
-
-          <h3 className="font-semibold mb-4">Blockchain Details</h3>
-
-          <div className="flex flex-col gap-4">
-            <div>
-              <p className="text-sm text-secondary mb-1">Transaction Hash</p>
-              <div className="flex items-center gap-2">
-                <code className="rounded-3 bg-foreground-secondary px-2 py-1 text-sm">
-                  {truncateTxHash(transaction.txHash)}
-                </code>
-                <Button
-                  variant="icon"
-                  size="sm"
-                  onClick={() => copyToClipboard(transaction.txHash, "Transaction hash")}
-                >
-                  <Copy className="size-4" />
-                </Button>
-                <a
-                  href={`https://etherscan.io/tx/${transaction.txHash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Button variant="icon" size="sm">
-                    <ArrowSquareOut className="size-4" />
-                  </Button>
-                </a>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
+        {/* Left Column - Main Info */}
+        <div className="col-span-2 space-y-6">
+          {/* Amount Details */}
+          <div className="bg-[#252525] rounded-[20px] p-6">
+            <h2 className="text-[16px] text-white tracking-[-0.16px] mb-4">
+              Amount Details
+            </h2>
+            <div className="grid grid-cols-2 gap-6">
               <div>
-                <p className="text-sm text-secondary mb-1">From (Customer)</p>
+                <div className="text-[12px] text-[#bbb] tracking-[-0.12px] mb-1">
+                  Crypto Amount
+                </div>
+                <div className="text-[20px] text-white tracking-[-0.20px]">
+                  {transaction.amountCrypto} {transaction.token}
+                </div>
+                <div className="text-[12px] text-[#bbb] tracking-[-0.12px]">
+                  on {transaction.chain}
+                </div>
+              </div>
+              <div>
+                <div className="text-[12px] text-[#bbb] tracking-[-0.12px] mb-1">
+                  Fiat Amount
+                </div>
+                <div className="text-[20px] text-white tracking-[-0.20px]">
+                  ${transaction.amountFiat.toLocaleString()} {transaction.fiatCurrency}
+                </div>
+                <div className="text-[12px] text-[#bbb] tracking-[-0.12px]">
+                  Fee: ${transaction.feeAmount} • Net: ${transaction.netAmount}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Transaction Info */}
+          <div className="bg-[#252525] rounded-[20px] p-6">
+            <h2 className="text-[16px] text-white tracking-[-0.16px] mb-4">
+              Transaction Information
+            </h2>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between py-2 border-b border-[#363636]">
+                <span className="text-[14px] text-[#bbb] tracking-[-0.14px]">Session ID</span>
                 <div className="flex items-center gap-2">
-                  <code className="rounded-3 bg-foreground-secondary px-2 py-1 text-sm">
+                  <span className="text-[14px] text-white tracking-[-0.14px] font-mono">
+                    {transaction.sessionId}
+                  </span>
+                  <CopyButton text={transaction.sessionId} field="sessionId" />
+                </div>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-[#363636]">
+                <span className="text-[14px] text-[#bbb] tracking-[-0.14px]">Transaction Hash</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[14px] text-white tracking-[-0.14px] font-mono">
+                    {transaction.txHash.slice(0, 10)}...{transaction.txHash.slice(-8)}
+                  </span>
+                  <CopyButton text={transaction.txHash} field="txHash" />
+                  <a
+                    href={`https://etherscan.io/tx/${transaction.txHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#0988f0] hover:text-[#0770c8]"
+                  >
+                    <ExternalLink size={14} />
+                  </a>
+                </div>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-[#363636]">
+                <span className="text-[14px] text-[#bbb] tracking-[-0.14px]">Customer Wallet</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[14px] text-white tracking-[-0.14px] font-mono">
                     {transaction.customerWallet}
-                  </code>
-                  <Button
-                    variant="icon"
-                    size="sm"
-                    onClick={() => copyToClipboard(transaction.customerWallet, "Customer wallet")}
-                  >
-                    <Copy className="size-4" />
-                  </Button>
+                  </span>
+                  <CopyButton text={transaction.customerWallet} field="customerWallet" />
                 </div>
               </div>
-              <div>
-                <p className="text-sm text-secondary mb-1">To (Merchant)</p>
+              <div className="flex items-center justify-between py-2 border-b border-[#363636]">
+                <span className="text-[14px] text-[#bbb] tracking-[-0.14px]">Merchant Wallet</span>
                 <div className="flex items-center gap-2">
-                  <code className="rounded-3 bg-foreground-secondary px-2 py-1 text-sm">
+                  <span className="text-[14px] text-white tracking-[-0.14px] font-mono">
                     {transaction.merchantWallet}
-                  </code>
-                  <Button
-                    variant="icon"
-                    size="sm"
-                    onClick={() => copyToClipboard(transaction.merchantWallet, "Merchant wallet")}
-                  >
-                    <Copy className="size-4" />
-                  </Button>
+                  </span>
+                  <CopyButton text={transaction.merchantWallet} field="merchantWallet" />
                 </div>
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <span className="text-[14px] text-[#bbb] tracking-[-0.14px]">Merchant</span>
+                <Link
+                  href={`/merchants/${transaction.merchantId}`}
+                  className="text-[14px] text-[#0988f0] hover:text-[#0770c8] tracking-[-0.14px]"
+                >
+                  {transaction.merchantName}
+                </Link>
               </div>
             </div>
           </div>
-        </Card>
+        </div>
 
-        <Card className="p-6">
-          <h2 className="font-semibold mb-4">Timeline</h2>
-          <div className="flex flex-col gap-4">
-            {timelineEvents.map((event, index) => {
-              const Icon = event.icon;
-              const isLast = index === timelineEvents.length - 1;
-              const isFailed = event.label === "Failed" || event.label === "Expired";
+        {/* Right Column - Timeline */}
+        <div className="space-y-6">
+          {/* Status Timeline */}
+          <div className="bg-[#252525] rounded-[20px] p-6">
+            <h2 className="text-[16px] text-white tracking-[-0.16px] mb-4">
+              Timeline
+            </h2>
+            <div className="space-y-4">
+              {timelineSteps.map((step, index) => {
+                const Icon = step.completed ? step.icon : Clock;
+                const isLast = index === timelineSteps.length - 1;
 
-              return (
-                <div key={event.label} className="flex gap-3">
-                  <div className="flex flex-col items-center">
-                    <div
-                      className={`flex size-8 items-center justify-center rounded-full ${
-                        event.completed
-                          ? isFailed
-                            ? "bg-error/10 text-error"
-                            : "bg-success/10 text-success"
-                          : "bg-foreground-secondary text-secondary"
-                      }`}
-                    >
-                      <Icon className="size-4" weight="fill" />
-                    </div>
-                    {!isLast && (
+                return (
+                  <div key={step.label} className="flex gap-3">
+                    <div className="flex flex-col items-center">
                       <div
-                        className={`h-8 w-0.5 ${
-                          event.completed ? "bg-success" : "bg-border-primary"
+                        className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                          step.completed
+                            ? "bg-[#1a4d2e]"
+                            : isFailed && !step.completed
+                            ? "bg-[#4d1a1a]"
+                            : "bg-[#363636]"
                         }`}
-                      />
-                    )}
+                      >
+                        {isFailed && !step.completed ? (
+                          <XCircle size={16} className="text-[#f87171]" />
+                        ) : (
+                          <Icon
+                            size={16}
+                            className={step.completed ? "text-[#4ade80]" : "text-[#bbb]"}
+                          />
+                        )}
+                      </div>
+                      {!isLast && (
+                        <div
+                          className={`w-0.5 h-8 ${
+                            step.completed ? "bg-[#1a4d2e]" : "bg-[#363636]"
+                          }`}
+                        />
+                      )}
+                    </div>
+                    <div className="flex-1 pb-4">
+                      <div className="text-[14px] text-white tracking-[-0.14px]">
+                        {step.label}
+                      </div>
+                      {step.timestamp ? (
+                        <div className="text-[12px] text-[#bbb] tracking-[-0.12px]">
+                          {new Date(step.timestamp).toLocaleString()}
+                        </div>
+                      ) : (
+                        <div className="text-[12px] text-[#666] tracking-[-0.12px]">
+                          {isFailed ? "Not completed" : "Pending"}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex-1 pb-4">
-                    <p className="font-medium">{event.label}</p>
-                    {event.time ? (
-                      <p className="text-sm text-secondary">{formatDateTime(event.time)}</p>
-                    ) : (
-                      <p className="text-sm text-tertiary">Pending</p>
-                    )}
+                );
+              })}
+
+              {/* Current Status */}
+              {transaction.substatus && (
+                <div className="pt-4 border-t border-[#363636]">
+                  <div className="text-[12px] text-[#bbb] tracking-[-0.12px] mb-1">
+                    Current Status
+                  </div>
+                  <div className="text-[14px] text-white tracking-[-0.14px]">
+                    {transactionSubstatusLabels[transaction.substatus]}
                   </div>
                 </div>
-              );
-            })}
+              )}
+            </div>
           </div>
-        </Card>
+
+          {/* Quick Actions */}
+          <div className="bg-[#252525] rounded-[20px] p-6">
+            <h2 className="text-[16px] text-white tracking-[-0.16px] mb-4">
+              Actions
+            </h2>
+            <div className="space-y-2">
+              <a
+                href={`https://etherscan.io/tx/${transaction.txHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 w-full px-4 py-3 bg-[#1a1a1a] hover:bg-[#363636] text-white rounded-lg transition-colors text-[14px] tracking-[-0.14px]"
+              >
+                <ExternalLink size={16} />
+                View on Explorer
+              </a>
+              <button
+                onClick={() => handleCopy(transaction.txHash, "txHash-action")}
+                className="flex items-center gap-2 w-full px-4 py-3 bg-[#1a1a1a] hover:bg-[#363636] text-white rounded-lg transition-colors text-[14px] tracking-[-0.14px]"
+              >
+                {copiedField === "txHash-action" ? (
+                  <>
+                    <Check size={16} className="text-[#4ade80]" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy size={16} />
+                    Copy Transaction Hash
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

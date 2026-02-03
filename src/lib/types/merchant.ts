@@ -1,4 +1,10 @@
-export type MerchantStatus = "pending_kyc" | "active" | "suspended" | "offboarded";
+export type MerchantStatus =
+  | "pending_kyb"
+  | "kyb_in_review"
+  | "kyb_rejected"
+  | "active"
+  | "suspended"
+  | "disabled";
 
 export interface BankAccount {
   accountName: string;
@@ -14,6 +20,7 @@ export interface Merchant {
   contactEmail: string;
   contactPhone: string;
   status: MerchantStatus;
+  statusMessage?: string;
   createdAt: string;
   updatedAt: string;
   settlementCurrency: "USD" | "EUR" | "GBP";
@@ -59,15 +66,28 @@ export interface CreateMerchantInput {
 }
 
 export const merchantStatusLabels: Record<MerchantStatus, string> = {
-  pending_kyc: "Pending KYC",
+  pending_kyb: "Pending KYB",
+  kyb_in_review: "KYB In Review",
+  kyb_rejected: "KYB Rejected",
   active: "Active",
   suspended: "Suspended",
-  offboarded: "Offboarded",
+  disabled: "Disabled",
 };
 
 export const merchantStatusColors: Record<MerchantStatus, "warning" | "success" | "error" | "info"> = {
-  pending_kyc: "warning",
+  pending_kyb: "warning",
+  kyb_in_review: "info",
+  kyb_rejected: "error",
   active: "success",
   suspended: "error",
-  offboarded: "info",
+  disabled: "info",
+};
+
+export const merchantStatusMessages: Record<MerchantStatus, string> = {
+  pending_kyb: "Awaiting KYB submission",
+  kyb_in_review: "KYB documents are being reviewed",
+  kyb_rejected: "KYB verification was unsuccessful",
+  active: "Merchant is active and can process payments",
+  suspended: "Account temporarily suspended",
+  disabled: "Account has been disabled",
 };

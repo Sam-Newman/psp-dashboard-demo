@@ -1,4 +1,4 @@
-export type Role = "admin" | "analyst" | "support";
+export type Role = "admin" | "support";
 
 export interface RolePermissions {
   merchants: {
@@ -20,6 +20,24 @@ export interface RolePermissions {
     view: boolean;
     edit: boolean;
   };
+  apiKeys: {
+    view: boolean;
+    create: boolean;
+    revoke: boolean;
+  };
+  team: {
+    view: boolean;
+    invite: boolean;
+    remove: boolean;
+  };
+  auditLogs: {
+    view: boolean;
+  };
+  webhooks: {
+    view: boolean;
+    create: boolean;
+    delete: boolean;
+  };
 }
 
 export const rolePermissions: Record<Role, RolePermissions> = {
@@ -28,29 +46,29 @@ export const rolePermissions: Record<Role, RolePermissions> = {
     transactions: { view: true, export: true },
     settlements: { view: true, viewDetails: true, generateReport: true },
     settings: { view: true, edit: true },
-  },
-  analyst: {
-    merchants: { view: true, create: false, edit: false, suspend: false },
-    transactions: { view: true, export: true },
-    settlements: { view: true, viewDetails: true, generateReport: true },
-    settings: { view: false, edit: false },
+    apiKeys: { view: true, create: true, revoke: true },
+    team: { view: true, invite: true, remove: true },
+    auditLogs: { view: true },
+    webhooks: { view: true, create: true, delete: true },
   },
   support: {
     merchants: { view: true, create: false, edit: false, suspend: false },
     transactions: { view: true, export: false },
-    settlements: { view: false, viewDetails: false, generateReport: false },
-    settings: { view: false, edit: false },
+    settlements: { view: true, viewDetails: true, generateReport: false },
+    settings: { view: true, edit: false },
+    apiKeys: { view: true, create: false, revoke: false },
+    team: { view: true, invite: false, remove: false },
+    auditLogs: { view: true },
+    webhooks: { view: true, create: false, delete: false },
   },
 };
 
 export const roleLabels: Record<Role, string> = {
   admin: "Admin",
-  analyst: "Analyst",
   support: "Support",
 };
 
 export const roleDescriptions: Record<Role, string> = {
   admin: "Full access to all features",
-  analyst: "Read-only access with reporting",
-  support: "Limited access for customer support",
+  support: "Read-only access for customer support",
 };

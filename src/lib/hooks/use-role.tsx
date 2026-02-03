@@ -21,7 +21,11 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored && (stored === "admin" || stored === "analyst" || stored === "support")) {
+    // Map legacy "analyst" role to "support"
+    if (stored === "analyst") {
+      localStorage.setItem(STORAGE_KEY, "support");
+      setRoleState("support");
+    } else if (stored === "admin" || stored === "support") {
       setRoleState(stored);
     }
     setIsHydrated(true);

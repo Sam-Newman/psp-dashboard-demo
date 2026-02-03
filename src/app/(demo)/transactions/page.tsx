@@ -1,40 +1,69 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Download, Filter, X } from "lucide-react";
+import { Download, Filter, X, Search } from "lucide-react";
+import Link from "next/link";
 
 import { StatusBadge } from "@/components/shared/status-badge";
 import { useRole } from "@/lib/hooks/use-role";
-import { mockTransactions } from "@/lib/mock-data/transactions";
+import { mockTransactions, searchTransactions } from "@/lib/mock-data/transactions";
 import { mockMerchants } from "@/lib/mock-data/merchants";
 
 export default function TransactionsPage() {
   const { hasPermission } = useRole();
   const [showFilters, setShowFilters] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedMerchant, setSelectedMerchant] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [selectedChain, setSelectedChain] = useState<string>("all");
+  const [selectedToken, setSelectedToken] = useState<string>("all");
 
   const filteredTransactions = useMemo(() => {
-    return mockTransactions.filter((tx) => {
+    let results = searchQuery ? searchTransactions(searchQuery) : mockTransactions;
+
+    return results.filter((tx) => {
       if (selectedMerchant !== "all" && tx.merchantId !== selectedMerchant) return false;
       if (selectedStatus !== "all" && tx.status !== selectedStatus) return false;
       if (selectedChain !== "all" && tx.chain !== selectedChain) return false;
+      if (selectedToken !== "all" && tx.token !== selectedToken) return false;
       return true;
     });
-  }, [selectedMerchant, selectedStatus, selectedChain]);
+  }, [searchQuery, selectedMerchant, selectedStatus, selectedChain, selectedToken]);
 
   const hasActiveFilters =
-    selectedMerchant !== "all" || selectedStatus !== "all" || selectedChain !== "all";
+    selectedMerchant !== "all" || selectedStatus !== "all" || selectedChain !== "all" || selectedToken !== "all";
 
   const clearFilters = () => {
     setSelectedMerchant("all");
     setSelectedStatus("all");
     setSelectedChain("all");
+    setSelectedToken("all");
   };
 
   return (
     <div className="p-8">
+      {/* Search Bar */}
+      <div className="mb-6">
+        <div className="relative max-w-md">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#bbb]" size={20} />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by session ID, wallet, or amount..."
+            className="w-full bg-[#252525] border border-[#4f4f4f] rounded-lg pl-12 pr-4 py-3 text-white focus:outline-none focus:border-[#0988f0] text-[14px] tracking-[-0.14px] placeholder:text-[#666]"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-[#bbb] hover:text-white"
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Header Actions */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
@@ -51,7 +80,7 @@ export default function TransactionsPage() {
             {hasActiveFilters && (
               <span className="bg-white text-[#0988f0] rounded-full w-5 h-5 flex items-center justify-center text-[12px]">
                 {
-                  [selectedMerchant, selectedStatus, selectedChain].filter(
+                  [selectedMerchant, selectedStatus, selectedChain, selectedToken].filter(
                     (f) => f !== "all"
                   ).length
                 }
@@ -79,7 +108,7 @@ export default function TransactionsPage() {
       {/* Filters Panel */}
       {showFilters && (
         <div className="bg-[#252525] rounded-[20px] p-6 mb-6">
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-5 gap-4">
             <div>
               <label className="block text-[14px] text-[#bbb] tracking-[-0.14px] mb-2">
                 Merchant
@@ -127,7 +156,21 @@ export default function TransactionsPage() {
                 <option value="base">Base</option>
                 <option value="polygon">Polygon</option>
                 <option value="ethereum">Ethereum</option>
-                <option value="solana">Solana</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[14px] text-[#bbb] tracking-[-0.14px] mb-2">
+                Token
+              </label>
+              <select
+                value={selectedToken}
+                onChange={(e) => setSelectedToken(e.target.value)}
+                className="w-full bg-[#1a1a1a] border border-[#4f4f4f] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#0988f0] text-[14px] tracking-[-0.14px]"
+              >
+                <option value="all">All Tokens</option>
+                <option value="USDC">USDC</option>
+                <option value="USDT">USDT</option>
+                <option value="ETH">ETH</option>
               </select>
             </div>
             <div>
@@ -155,6 +198,9 @@ export default function TransactionsPage() {
                   Date
                 </th>
                 <th className="text-left px-4 py-4 text-[14px] text-[#bbb] tracking-[-0.14px] font-normal">
+                  Session ID
+                </th>
+                <th className="text-left px-4 py-4 text-[14px] text-[#bbb] tracking-[-0.14px] font-normal">
                   Merchant
                 </th>
                 <th className="text-left px-4 py-4 text-[14px] text-[#bbb] tracking-[-0.14px] font-normal">
@@ -170,9 +216,6 @@ export default function TransactionsPage() {
                   Network
                 </th>
                 <th className="text-left px-4 py-4 text-[14px] text-[#bbb] tracking-[-0.14px] font-normal">
-                  Hash ID
-                </th>
-                <th className="text-left px-4 py-4 text-[14px] text-[#bbb] tracking-[-0.14px] font-normal">
                   Status
                 </th>
               </tr>
@@ -181,65 +224,81 @@ export default function TransactionsPage() {
               {filteredTransactions.map((tx) => (
                 <tr
                   key={tx.id}
-                  className="border-b border-[#4f4f4f] hover:bg-[#2a2a2a] transition-colors cursor-pointer"
+                  className="border-b border-[#4f4f4f] hover:bg-[#2a2a2a] transition-colors"
                 >
                   <td className="px-4 py-4">
-                    <div className="text-[14px] text-white tracking-[-0.14px] whitespace-nowrap">
-                      {new Date(tx.createdAt).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "2-digit",
-                      })}
-                    </div>
-                    <div className="text-[12px] text-[#bbb] tracking-[-0.12px]">
-                      {new Date(tx.createdAt).toLocaleTimeString("en-US", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </div>
+                    <Link href={`/transactions/${tx.id}`} className="block">
+                      <div className="text-[14px] text-white tracking-[-0.14px] whitespace-nowrap">
+                        {new Date(tx.createdAt).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "2-digit",
+                        })}
+                      </div>
+                      <div className="text-[12px] text-[#bbb] tracking-[-0.12px]">
+                        {new Date(tx.createdAt).toLocaleTimeString("en-US", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </div>
+                    </Link>
                   </td>
                   <td className="px-4 py-4">
-                    <div className="text-[14px] text-white tracking-[-0.14px]">
-                      {tx.merchantName}
-                    </div>
+                    <Link href={`/transactions/${tx.id}`} className="block">
+                      <div className="text-[12px] text-[#bbb] tracking-[-0.12px] font-mono">
+                        {tx.sessionId.slice(0, 16)}...
+                      </div>
+                    </Link>
                   </td>
                   <td className="px-4 py-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-[#4f4f4f] rounded-full flex items-center justify-center">
-                        <span className="text-[8px] text-white">
-                          {tx.token.substring(0, 2)}
+                    <Link href={`/transactions/${tx.id}`} className="block">
+                      <div className="text-[14px] text-white tracking-[-0.14px]">
+                        {tx.merchantName}
+                      </div>
+                    </Link>
+                  </td>
+                  <td className="px-4 py-4">
+                    <Link href={`/transactions/${tx.id}`} className="block">
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 bg-[#4f4f4f] rounded-full flex items-center justify-center">
+                          <span className="text-[8px] text-white">
+                            {tx.token.substring(0, 2)}
+                          </span>
+                        </div>
+                        <span className="text-[14px] text-white tracking-[-0.14px]">
+                          {tx.amountCrypto} {tx.token}
                         </span>
                       </div>
-                      <span className="text-[14px] text-white tracking-[-0.14px]">
-                        {tx.amountCrypto} {tx.token}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-4">
+                    <Link href={`/transactions/${tx.id}`} className="block">
+                      <div className="text-[14px] text-white tracking-[-0.14px]">
+                        ${tx.amountFiat}
+                      </div>
+                      <div className="text-[12px] text-[#bbb] tracking-[-0.12px]">
+                        {tx.fiatCurrency}
+                      </div>
+                    </Link>
+                  </td>
+                  <td className="px-4 py-4">
+                    <Link href={`/transactions/${tx.id}`} className="block">
+                      <div className="text-[14px] text-[#bbb] tracking-[-0.14px]">
+                        {tx.customerWallet}
+                      </div>
+                    </Link>
+                  </td>
+                  <td className="px-4 py-4">
+                    <Link href={`/transactions/${tx.id}`} className="block">
+                      <span className="bg-[#363636] px-2 py-1 rounded text-[12px] text-[#bbb] tracking-[-0.12px] capitalize">
+                        {tx.chain}
                       </span>
-                    </div>
+                    </Link>
                   </td>
                   <td className="px-4 py-4">
-                    <div className="text-[14px] text-white tracking-[-0.14px]">
-                      ${tx.amountFiat}
-                    </div>
-                    <div className="text-[12px] text-[#bbb] tracking-[-0.12px]">
-                      {tx.fiatCurrency}
-                    </div>
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="text-[14px] text-[#bbb] tracking-[-0.14px]">
-                      {tx.customerWallet}
-                    </div>
-                  </td>
-                  <td className="px-4 py-4">
-                    <span className="bg-[#363636] px-2 py-1 rounded text-[12px] text-[#bbb] tracking-[-0.12px] capitalize">
-                      {tx.chain}
-                    </span>
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="text-[14px] text-[#bbb] tracking-[-0.14px] underline cursor-pointer hover:text-white">
-                      {tx.txHash.slice(0, 6)}...{tx.txHash.slice(-4)}
-                    </div>
-                  </td>
-                  <td className="px-4 py-4">
-                    <StatusBadge status={tx.status} substatus={tx.substatus} />
+                    <Link href={`/transactions/${tx.id}`} className="block">
+                      <StatusBadge status={tx.status} substatus={tx.substatus} />
+                    </Link>
                   </td>
                 </tr>
               ))}

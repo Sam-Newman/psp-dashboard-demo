@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Download, FileText, X } from "lucide-react";
+import Link from "next/link";
 
 import { StatCard } from "@/components/shared/stat-card";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -187,54 +188,68 @@ export default function SettlementsPage() {
               {mockSettlements.map((settlement) => (
                 <tr
                   key={settlement.id}
-                  className="border-b border-[#4f4f4f] hover:bg-[#2a2a2a] transition-colors cursor-pointer"
+                  className="border-b border-[#4f4f4f] hover:bg-[#2a2a2a] transition-colors"
                 >
                   <td className="px-6 py-4">
-                    <div className="text-[14px] text-white tracking-[-0.14px]">
-                      {settlement.merchantName}
-                    </div>
-                    <div className="text-[12px] text-[#bbb] tracking-[-0.12px]">
-                      {settlement.merchantId}
-                    </div>
+                    <Link href={`/settlements/${settlement.id}`} className="block">
+                      <div className="text-[14px] text-white tracking-[-0.14px]">
+                        {settlement.merchantName}
+                      </div>
+                      <div className="text-[12px] text-[#bbb] tracking-[-0.12px]">
+                        {settlement.merchantId}
+                      </div>
+                    </Link>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="text-[14px] text-[#bbb] tracking-[-0.14px]">
-                      {new Date(settlement.period.start).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      })}{" "}
-                      -{" "}
-                      {new Date(settlement.period.end).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </div>
+                    <Link href={`/settlements/${settlement.id}`} className="block">
+                      <div className="text-[14px] text-[#bbb] tracking-[-0.14px]">
+                        {new Date(settlement.period.start).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })}{" "}
+                        -{" "}
+                        {new Date(settlement.period.end).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </div>
+                    </Link>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <div className="text-[14px] text-white tracking-[-0.14px]">
-                      ${settlement.totalVolume.toLocaleString()}
-                    </div>
-                    <div className="text-[12px] text-[#bbb] tracking-[-0.12px]">
-                      {settlement.currency}
-                    </div>
+                    <Link href={`/settlements/${settlement.id}`} className="block">
+                      <div className="text-[14px] text-white tracking-[-0.14px]">
+                        ${settlement.totalVolume.toLocaleString()}
+                      </div>
+                      <div className="text-[12px] text-[#bbb] tracking-[-0.12px]">
+                        {settlement.currency}
+                      </div>
+                    </Link>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <div className="text-[14px] text-[#bbb] tracking-[-0.14px]">
-                      ${settlement.totalFees.toLocaleString()}
-                    </div>
+                    <Link href={`/settlements/${settlement.id}`} className="block">
+                      <div className="text-[14px] text-[#bbb] tracking-[-0.14px]">
+                        ${settlement.totalFees.toLocaleString()}
+                      </div>
+                    </Link>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <div className="text-[14px] text-white tracking-[-0.14px]">
-                      ${settlement.netAmount.toLocaleString()}
-                    </div>
+                    <Link href={`/settlements/${settlement.id}`} className="block">
+                      <div className="text-[14px] text-white tracking-[-0.14px]">
+                        ${settlement.netAmount.toLocaleString()}
+                      </div>
+                    </Link>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="text-[14px] text-white tracking-[-0.14px]">
-                      {settlement.transactionCount}
-                    </div>
+                    <Link href={`/settlements/${settlement.id}`} className="block">
+                      <div className="text-[14px] text-white tracking-[-0.14px]">
+                        {settlement.transactionCount}
+                      </div>
+                    </Link>
                   </td>
                   <td className="px-6 py-4">
-                    <StatusBadge status={settlement.status} />
+                    <Link href={`/settlements/${settlement.id}`} className="block">
+                      <StatusBadge status={settlement.status} />
+                    </Link>
                   </td>
                 </tr>
               ))}

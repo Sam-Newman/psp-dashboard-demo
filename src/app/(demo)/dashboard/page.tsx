@@ -10,9 +10,15 @@ import { mockTransactions } from "@/lib/mock-data/transactions";
 
 export default function DashboardPage() {
   const activeMerchants = mockMerchants.filter((m) => m.status === "active");
-  const pendingKYC = mockMerchants.filter((m) => m.status === "pending_kyc").length;
+  const pendingKYB = mockMerchants.filter((m) => m.status === "pending_kyb" || m.status === "kyb_in_review").length;
   const totalVolume = mockMerchants.reduce((sum, m) => sum + m.totalVolume, 0);
   const totalTransactions = mockTransactions.length;
+
+  // Calculate success rate
+  const succeededTransactions = mockTransactions.filter((t) => t.status === "succeeded").length;
+  const successRate = totalTransactions > 0
+    ? ((succeededTransactions / totalTransactions) * 100).toFixed(1)
+    : "0.0";
 
   const recentTransactions = [...mockTransactions]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -35,12 +41,17 @@ export default function DashboardPage() {
         <StatCard
           label="Active Merchants"
           value={activeMerchants.length}
-          subtitle={`${pendingKYC} pending KYC`}
+          subtitle={`${pendingKYB} pending KYB`}
         />
         <StatCard
           label="Total Transactions"
           value={totalTransactions}
           subtitle="Across all merchants"
+        />
+        <StatCard
+          label="Success Rate"
+          value={`${successRate}%`}
+          subtitle={`${succeededTransactions} of ${totalTransactions} succeeded`}
         />
       </div>
 
@@ -53,9 +64,10 @@ export default function DashboardPage() {
         </div>
         <div className="space-y-4">
           {topMerchants.map((merchant) => (
-            <div
+            <Link
               key={merchant.id}
-              className="flex items-center justify-between p-4 bg-[#2a2a2a] rounded-lg hover:bg-[#303030] transition-colors cursor-pointer"
+              href={`/merchants/${merchant.id}`}
+              className="flex items-center justify-between p-4 bg-[#2a2a2a] rounded-lg hover:bg-[#303030] transition-colors"
             >
               <div className="flex-1">
                 <div className="text-[14px] text-white tracking-[-0.14px]">
@@ -74,7 +86,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               <StatusBadge status={merchant.status} />
-            </div>
+            </Link>
           ))}
         </div>
       </div>
@@ -95,9 +107,10 @@ export default function DashboardPage() {
         </div>
         <div className="space-y-3">
           {recentTransactions.map((tx) => (
-            <div
+            <Link
               key={tx.id}
-              className="flex items-center justify-between p-4 bg-[#2a2a2a] rounded-lg hover:bg-[#303030] transition-colors cursor-pointer"
+              href={`/transactions/${tx.id}`}
+              className="flex items-center justify-between p-4 bg-[#2a2a2a] rounded-lg hover:bg-[#303030] transition-colors"
             >
               <div className="flex-1">
                 <div className="text-[14px] text-white tracking-[-0.14px]">
@@ -120,7 +133,7 @@ export default function DashboardPage() {
                   <StatusBadge status={tx.status} substatus={tx.substatus} />
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
