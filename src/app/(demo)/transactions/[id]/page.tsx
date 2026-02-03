@@ -1,7 +1,7 @@
 "use client";
 
 import { use } from "react";
-import { ArrowLeft, ExternalLink, Copy, Check, Clock, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { ArrowLeft, ExternalLink, Copy, Check, Clock, CheckCircle, XCircle } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 

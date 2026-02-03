@@ -56,7 +56,6 @@ export default function AuditLogPage() {
   };
 
   const getActionDescription = (log: AuditLog) => {
-    const action = auditActionLabels[log.action].toLowerCase();
     const resourceType = auditResourceTypeLabels[log.resource.type].toLowerCase();
     const resourceName = log.resource.name || log.resource.id;
 

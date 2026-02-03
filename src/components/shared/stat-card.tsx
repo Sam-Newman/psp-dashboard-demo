@@ -5,35 +5,51 @@ interface StatCardProps {
 }
 
 export function StatCard({ label, value, subtitle }: StatCardProps) {
+  // Format large numbers with subscript decimals
+  const formatValue = () => {
+    if (typeof value === "string") {
+      // Handle currency strings like "$120,012.85"
+      const match = value.match(/^(\$?)([\d,]+)\.?(\d*)(%?)$/);
+      if (match) {
+        const [, prefix, whole, decimal, suffix] = match;
+        if (decimal) {
+          return (
+            <>
+              {prefix}{whole}<span className="text-[18px] text-[#888]">.{decimal}</span>{suffix}
+            </>
+          );
+        }
+        return <>{prefix}{whole}{suffix}</>;
+      }
+      return value;
+    }
+
+    if (value >= 1000) {
+      const decimal = value % 1 !== 0 ? `.${value.toFixed(2).split(".")[1]}` : "";
+      return (
+        <>
+          {Math.floor(value).toLocaleString()}
+          {decimal && <span className="text-[18px] text-[#888]">{decimal}</span>}
+        </>
+      );
+    }
+    return value;
+  };
+
   return (
-    <div className="bg-[#252525] flex-1 rounded-[20px]">
-      <div className="p-8">
-        <div className="flex flex-col gap-2">
-          <div className="text-[#bbb] text-[14px] tracking-[-0.14px]">
-            <p className="leading-[16px]">{label}</p>
-          </div>
-          <div className="text-white text-[26px] tracking-[-0.26px]">
-            <p className="leading-[26px]">
-              {typeof value === "number" && value >= 1000 ? (
-                <>
-                  <span>{Math.floor(value).toLocaleString()}</span>
-                  {value % 1 !== 0 && (
-                    <span className="text-[16px] tracking-[-0.16px]">
-                      .{value.toFixed(2).split(".")[1]}
-                    </span>
-                  )}
-                </>
-              ) : (
-                <span>{value}</span>
-              )}
-            </p>
-          </div>
-          {subtitle && (
-            <div className="text-[#bbb] text-[12px] tracking-[-0.12px]">
-              <p className="leading-[14px]">{subtitle}</p>
-            </div>
-          )}
+    <div className="flex-1 rounded-2xl border border-[#222] bg-[#111]">
+      <div className="px-6 py-5">
+        <div className="text-[#777] text-[13px] tracking-[-0.01em] mb-2">
+          {label}
         </div>
+        <div className="text-white text-[28px] font-medium tracking-[-0.02em]">
+          {formatValue()}
+        </div>
+        {subtitle && (
+          <div className="text-[#555] text-[12px] tracking-[-0.01em] mt-1">
+            {subtitle}
+          </div>
+        )}
       </div>
     </div>
   );

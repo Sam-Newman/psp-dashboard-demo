@@ -1,40 +1,53 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import { Moon, Settings } from "lucide-react";
+import { Globe, Moon, Settings } from "lucide-react";
+import Image from "next/image";
 
 function IconButton({ children }: { children: React.ReactNode }) {
   return (
-    <button className="relative flex items-center justify-center p-3 rounded-2xl shrink-0 border border-[#4f4f4f] hover:bg-[#2a2a2a] transition-colors">
+    <button className="flex items-center justify-center w-11 h-11 rounded-full border border-[#333] bg-[#111] hover:bg-[#1a1a1a] transition-colors">
       {children}
     </button>
   );
 }
 
-export function Header() {
-  const pathname = usePathname();
-
-  const getPageTitle = () => {
-    if (pathname.startsWith("/dashboard")) return "Dashboard Overview";
-    if (pathname.startsWith("/merchants")) return "Merchant Management";
-    if (pathname.startsWith("/transactions")) return "Transaction Monitoring";
-    if (pathname.startsWith("/settlements")) return "Settlements & Reporting";
-    if (pathname.startsWith("/settings")) return "Settings";
-    return "Dashboard";
-  };
-
+function LanguageButton() {
   return (
-    <div className="bg-[#141414] border-b border-[#2a2a2a] px-8 py-6">
+    <button className="flex items-center gap-2 px-4 h-11 rounded-full border border-[#333] bg-[#111] hover:bg-[#1a1a1a] transition-colors">
+      <Globe className="size-4 text-white" />
+      <span className="text-white text-[13px]">En</span>
+    </button>
+  );
+}
+
+function PartnerBranding() {
+  return (
+    <div className="flex items-center gap-2">
+      <Image
+        src="/logo.png"
+        alt="WalletConnect Pay"
+        width={24}
+        height={24}
+      />
+      <span className="text-white text-[15px] font-medium tracking-[-0.01em]">Pay</span>
+      <span className="text-[#666] text-[15px]">+</span>
+      <span className="text-white text-[15px] font-medium tracking-[-0.01em]">Partner</span>
+    </div>
+  );
+}
+
+export function Header() {
+  return (
+    <div className="bg-[#0d0d0d] border-b border-[#1a1a1a] px-8 py-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-[26px] text-white tracking-[-0.26px]">
-          {getPageTitle()}
-        </h1>
+        <PartnerBranding />
         <div className="flex items-center gap-2">
+          <LanguageButton />
           <IconButton>
-            <Moon className="size-6 text-white" />
+            <Moon className="size-5 text-white" />
           </IconButton>
           <IconButton>
-            <Settings className="size-6 text-white" />
+            <Settings className="size-5 text-white" />
           </IconButton>
         </div>
       </div>

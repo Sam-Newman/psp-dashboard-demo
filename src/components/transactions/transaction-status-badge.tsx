@@ -28,7 +28,7 @@ const substatusLabels: Record<string, string> = {
   expired: "Expired",
 };
 
-export function TransactionStatusBadge({ status, substatus, size = "md" }: TransactionStatusBadgeProps) {
+export function TransactionStatusBadge({ status, substatus, size: _size = "md" }: TransactionStatusBadgeProps) {
   const config = statusConfig[status];
 
   // Use substatus label if available for succeeded status
