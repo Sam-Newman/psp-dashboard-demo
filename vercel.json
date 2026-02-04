@@ -1,5 +1,5 @@
 {
-  "buildCommand": "pnpm --filter psp-dashboard build",
+  "buildCommand": "pnpm exec next build",
   "installCommand": "pnpm install",
   "framework": "nextjs",
   "outputDirectory": ".next"
